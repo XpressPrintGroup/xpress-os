@@ -12,9 +12,10 @@ export default async function NewJobPage({
 
   const supabase = await createClient();
 
-  const [{ data: customer }, { count }] = await Promise.all([
+  const [{ data: customer }, { count }, { data: campaigns }] = await Promise.all([
     supabase.from("customers").select("id, name").eq("id", customerId).single(),
     supabase.from("jobs").select("*", { count: "exact", head: true }),
+    supabase.from("campaigns").select("id, name").eq("customer_id", customerId).order("name"),
   ]);
 
   if (!customer) notFound();
@@ -46,6 +47,27 @@ export default async function NewJobPage({
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
           />
         </div>
+
+        {campaigns && campaigns.length > 0 && (
+          <div>
+            <label htmlFor="campaign_id" className="mb-1 block text-sm font-medium text-slate-700">
+              Campaign (optional)
+            </label>
+            <select
+              id="campaign_id"
+              name="campaign_id"
+              defaultValue=""
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            >
+              <option value="">No campaign</option>
+              {campaigns.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div>
           <label htmlFor="assigned_to" className="mb-1 block text-sm font-medium text-slate-700">

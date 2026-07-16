@@ -4,6 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { updateCustomer, deleteCustomer, addActivity } from "../actions";
 import { DeleteButton } from "./delete-button";
 
+function formatDateRange(start: string | null, end: string | null) {
+  if (start && end) return `${start} – ${end}`;
+  if (start) return `From ${start}`;
+  if (end) return `Until ${end}`;
+  return null;
+}
+
 export default async function CustomerDetailPage({
   params,
   searchParams,
@@ -15,7 +22,7 @@ export default async function CustomerDetailPage({
   const { error } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: customer }, { data: activity }, { data: jobs }, { data: quotes }] =
+  const [{ data: customer }, { data: activity }, { data: jobs }, { data: quotes }, { data: campaigns }] =
     await Promise.all([
       supabase.from("customers").select("*").eq("id", id).single(),
       supabase
@@ -33,6 +40,11 @@ export default async function CustomerDetailPage({
         .select("id, quote_number, status, total")
         .eq("customer_id", id)
         .order("created_at", { ascending: false }),
+      supabase
+        .from("campaigns")
+        .select("id, name, start_date, end_date")
+        .eq("customer_id", id)
+        .order("created_at", { ascending: false }),
     ]);
 
   if (!customer) notFound();
@@ -42,7 +54,7 @@ export default async function CustomerDetailPage({
   const boundAddActivity = addActivity.bind(null, id);
 
   return (
-    <div className="grid max-w-7xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid max-w-full grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       <div>
         <h1 className="mb-6 text-2xl font-semibold text-slate-900">{customer.name}</h1>
 
@@ -171,6 +183,36 @@ export default async function CustomerDetailPage({
           ))}
           {quotes?.length === 0 && (
             <p className="text-sm text-slate-400">No quotes yet.</p>
+          )}
+        </ul>
+      </div>
+
+      <div>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-900">Campaigns</h2>
+          <Link
+            href={`/campaigns/new?customerId=${id}`}
+            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            New campaign
+          </Link>
+        </div>
+
+        <ul className="space-y-3">
+          {campaigns?.map((campaign) => (
+            <li key={campaign.id} className="rounded-md border border-slate-200 bg-white p-3">
+              <Link href={`/campaigns/${campaign.id}`} className="font-medium text-slate-900">
+                {campaign.name}
+              </Link>
+              {formatDateRange(campaign.start_date, campaign.end_date) && (
+                <p className="mt-1 text-xs text-slate-400">
+                  {formatDateRange(campaign.start_date, campaign.end_date)}
+                </p>
+              )}
+            </li>
+          ))}
+          {campaigns?.length === 0 && (
+            <p className="text-sm text-slate-400">No campaigns yet.</p>
           )}
         </ul>
       </div>

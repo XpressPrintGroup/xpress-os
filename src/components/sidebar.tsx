@@ -7,8 +7,10 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/customers", label: "Customers" },
   { href: "/jobs", label: "Jobs" },
+  { href: "/campaigns", label: "Campaigns" },
   { href: "/quotes", label: "Quotes" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/suppliers", label: "Suppliers" },
   { href: "/board", label: "Production Board" },
 ];
 

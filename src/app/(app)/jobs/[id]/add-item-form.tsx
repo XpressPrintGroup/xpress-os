@@ -11,11 +11,15 @@ type Product = {
 export function AddItemForm({
   action,
   products,
+  suppliers,
 }: {
   action: (formData: FormData) => void;
   products: Product[];
+  suppliers: Product[];
 }) {
   const [description, setDescription] = useState("");
+  const [isOutsourced, setIsOutsourced] = useState(false);
+  const [supplier, setSupplier] = useState("");
 
   return (
     <form action={action} className="space-y-3">
@@ -64,6 +68,66 @@ export function AddItemForm({
           Add item
         </button>
       </div>
+
+      <div className="flex items-center gap-2">
+        <input
+          id="is_outsourced"
+          name="is_outsourced"
+          type="checkbox"
+          checked={isOutsourced}
+          onChange={(e) => setIsOutsourced(e.target.checked)}
+          className="rounded border-slate-300"
+        />
+        <label htmlFor="is_outsourced" className="text-sm text-slate-700">
+          Outsourced
+        </label>
+      </div>
+
+      {isOutsourced && (
+        <div className="max-w-sm space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3">
+          {suppliers.length > 0 && (
+            <ProductPicker
+              products={suppliers}
+              onSelect={(s) => setSupplier(s.name)}
+              placeholder="Type to search suppliers..."
+            />
+          )}
+          <input
+            name="supplier"
+            value={supplier}
+            onChange={(e) => setSupplier(e.target.value)}
+            placeholder="Supplier name"
+            className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+          />
+          <input
+            name="supplier_reference"
+            placeholder="Supplier reference / PO number"
+            className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+          />
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="mb-1 block text-xs font-medium text-slate-600">
+                Expected back
+              </label>
+              <input
+                name="supplier_due_date"
+                type="date"
+                className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="mb-1 block text-xs font-medium text-slate-600">Cost</label>
+              <input
+                name="supplier_cost"
+                type="number"
+                step="0.01"
+                min="0"
+                className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }
