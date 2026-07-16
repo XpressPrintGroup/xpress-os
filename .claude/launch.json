@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "D:\\Users\\PC\\Desktop\\xpress-os\\dev.cmd"],
+      "port": 3000
+    }
+  ]
+}
