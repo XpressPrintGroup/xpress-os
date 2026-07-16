@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/jobs", label: "Jobs" },
   { href: "/quotes", label: "Quotes" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/board", label: "Production Board" },
 ];
 
 export function Sidebar() {

@@ -1,15 +1,17 @@
 export const JOB_STATUSES = [
   "New Enquiry",
   "Quote",
-  "Awaiting Deposit",
   "Artwork",
   "Proof Sent",
   "Approved",
   "Printing",
-  "Finishing",
   "Ready",
+  "Dispatched",
   "Collected",
-  "Completed",
+  "Invoiced",
+  "Paid",
+  "On Hold",
+  "Cancelled",
 ] as const;
 
 export type JobStatus = (typeof JOB_STATUSES)[number];

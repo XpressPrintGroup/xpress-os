@@ -135,6 +135,31 @@ export default async function JobDetailPage({
         <Field label="Assigned to" name="assigned_to" defaultValue={job.assigned_to} />
         <Field label="Due date" name="due_date" type="date" defaultValue={job.due_date} />
         <div>
+          <label
+            htmlFor="tracking_number"
+            className="mb-1 block text-sm font-medium text-slate-700"
+          >
+            Tracking number / link
+          </label>
+          <input
+            id="tracking_number"
+            name="tracking_number"
+            defaultValue={job.tracking_number ?? ""}
+            placeholder="Paste the courier's tracking number or link"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+          />
+          {job.tracking_number?.startsWith("http") && (
+            <a
+              href={job.tracking_number}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-block text-sm font-medium text-slate-900 hover:underline"
+            >
+              Track package ↗
+            </a>
+          )}
+        </div>
+        <div>
           <label htmlFor="priority" className="mb-1 block text-sm font-medium text-slate-700">
             Priority
           </label>

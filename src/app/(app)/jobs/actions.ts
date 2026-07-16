@@ -40,6 +40,7 @@ export async function updateJob(id: string, customerId: string, formData: FormDa
     due_date: (formData.get("due_date") as string) || null,
     priority: (formData.get("priority") as string) || "Normal",
     notes: (formData.get("notes") as string) || null,
+    tracking_number: (formData.get("tracking_number") as string) || null,
   };
 
   const { error } = await supabase.from("jobs").update(fields).eq("id", id);
