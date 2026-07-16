@@ -15,19 +15,25 @@ export default async function CustomerDetailPage({
   const { error } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: customer }, { data: activity }, { data: jobs }] = await Promise.all([
-    supabase.from("customers").select("*").eq("id", id).single(),
-    supabase
-      .from("customer_activity")
-      .select("*")
-      .eq("customer_id", id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("jobs")
-      .select("id, job_number, status, due_date")
-      .eq("customer_id", id)
-      .order("created_at", { ascending: false }),
-  ]);
+  const [{ data: customer }, { data: activity }, { data: jobs }, { data: quotes }] =
+    await Promise.all([
+      supabase.from("customers").select("*").eq("id", id).single(),
+      supabase
+        .from("customer_activity")
+        .select("*")
+        .eq("customer_id", id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("jobs")
+        .select("id, job_number, status, due_date")
+        .eq("customer_id", id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("quotes")
+        .select("id, quote_number, status, total")
+        .eq("customer_id", id)
+        .order("created_at", { ascending: false }),
+    ]);
 
   if (!customer) notFound();
 
@@ -36,7 +42,7 @@ export default async function CustomerDetailPage({
   const boundAddActivity = addActivity.bind(null, id);
 
   return (
-    <div className="grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-3">
+    <div className="grid max-w-7xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
       <div>
         <h1 className="mb-6 text-2xl font-semibold text-slate-900">{customer.name}</h1>
 
@@ -137,6 +143,34 @@ export default async function CustomerDetailPage({
           ))}
           {jobs?.length === 0 && (
             <p className="text-sm text-slate-400">No jobs yet.</p>
+          )}
+        </ul>
+      </div>
+
+      <div>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-900">Quotes</h2>
+          <Link
+            href={`/quotes/new?customerId=${id}`}
+            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            New quote
+          </Link>
+        </div>
+
+        <ul className="space-y-3">
+          {quotes?.map((quote) => (
+            <li key={quote.id} className="rounded-md border border-slate-200 bg-white p-3">
+              <Link href={`/quotes/${quote.id}`} className="font-medium text-slate-900">
+                {quote.quote_number}
+              </Link>
+              <p className="mt-1 text-xs text-slate-400">
+                {quote.status} · £{Number(quote.total).toFixed(2)}
+              </p>
+            </li>
+          ))}
+          {quotes?.length === 0 && (
+            <p className="text-sm text-slate-400">No quotes yet.</p>
           )}
         </ul>
       </div>

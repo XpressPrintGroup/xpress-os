@@ -40,7 +40,16 @@ export default async function JobDetailPage({
           </>
         )}
       </p>
-      <h1 className="mb-6 text-2xl font-semibold text-slate-900">{job.job_number}</h1>
+      <h1 className="mb-2 text-2xl font-semibold text-slate-900">{job.job_number}</h1>
+
+      {job.quote_id && (
+        <p className="mb-4 text-sm text-slate-500">
+          Converted from{" "}
+          <Link href={`/quotes/${job.quote_id}`} className="font-medium text-slate-900">
+            quote
+          </Link>
+        </p>
+      )}
 
       {error && (
         <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
