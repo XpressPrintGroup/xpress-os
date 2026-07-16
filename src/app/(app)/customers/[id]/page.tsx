@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateCustomer, deleteCustomer, addActivity } from "../actions";
@@ -14,11 +15,16 @@ export default async function CustomerDetailPage({
   const { error } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: customer }, { data: activity }] = await Promise.all([
+  const [{ data: customer }, { data: activity }, { data: jobs }] = await Promise.all([
     supabase.from("customers").select("*").eq("id", id).single(),
     supabase
       .from("customer_activity")
       .select("*")
+      .eq("customer_id", id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("jobs")
+      .select("id, job_number, status, due_date")
       .eq("customer_id", id)
       .order("created_at", { ascending: false }),
   ]);
@@ -30,7 +36,7 @@ export default async function CustomerDetailPage({
   const boundAddActivity = addActivity.bind(null, id);
 
   return (
-    <div className="grid max-w-4xl grid-cols-1 gap-8 md:grid-cols-2">
+    <div className="grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-3">
       <div>
         <h1 className="mb-6 text-2xl font-semibold text-slate-900">{customer.name}</h1>
 
@@ -102,6 +108,35 @@ export default async function CustomerDetailPage({
           ))}
           {activity?.length === 0 && (
             <p className="text-sm text-slate-400">No activity logged yet.</p>
+          )}
+        </ul>
+      </div>
+
+      <div>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-900">Jobs</h2>
+          <Link
+            href={`/jobs/new?customerId=${id}`}
+            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            New job
+          </Link>
+        </div>
+
+        <ul className="space-y-3">
+          {jobs?.map((job) => (
+            <li key={job.id} className="rounded-md border border-slate-200 bg-white p-3">
+              <Link href={`/jobs/${job.id}`} className="font-medium text-slate-900">
+                {job.job_number}
+              </Link>
+              <p className="mt-1 text-xs text-slate-400">
+                {job.status}
+                {job.due_date ? ` · Due ${job.due_date}` : ""}
+              </p>
+            </li>
+          ))}
+          {jobs?.length === 0 && (
+            <p className="text-sm text-slate-400">No jobs yet.</p>
           )}
         </ul>
       </div>
