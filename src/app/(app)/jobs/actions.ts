@@ -10,7 +10,6 @@ export async function createJob(customerId: string, formData: FormData) {
   const fields = {
     job_number: formData.get("job_number") as string,
     customer_id: customerId,
-    product_type: (formData.get("product_type") as string) || null,
     assigned_to: (formData.get("assigned_to") as string) || null,
     due_date: (formData.get("due_date") as string) || null,
     priority: (formData.get("priority") as string) || "Normal",
@@ -37,7 +36,6 @@ export async function updateJob(id: string, customerId: string, formData: FormDa
   const supabase = await createClient();
 
   const fields = {
-    product_type: (formData.get("product_type") as string) || null,
     assigned_to: (formData.get("assigned_to") as string) || null,
     due_date: (formData.get("due_date") as string) || null,
     priority: (formData.get("priority") as string) || "Normal",
@@ -66,5 +64,31 @@ export async function updateJobStatus(id: string, formData: FormData) {
   }
 
   revalidatePath(`/jobs/${id}`);
+  revalidatePath("/jobs");
+}
+
+export async function addJobItem(jobId: string, formData: FormData) {
+  const description = formData.get("description") as string;
+  const quantity = Number(formData.get("quantity"));
+
+  if (!description?.trim() || !Number.isFinite(quantity)) {
+    return;
+  }
+
+  const supabase = await createClient();
+  await supabase.from("job_items").insert({
+    job_id: jobId,
+    description,
+    quantity,
+  });
+
+  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath("/jobs");
+}
+
+export async function deleteJobItem(itemId: string, jobId: string) {
+  const supabase = await createClient();
+  await supabase.from("job_items").delete().eq("id", itemId);
+  revalidatePath(`/jobs/${jobId}`);
   revalidatePath("/jobs");
 }

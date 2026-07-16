@@ -9,6 +9,7 @@ import {
 } from "../actions";
 import { QUOTE_STATUSES } from "../statuses";
 import { DeleteItemButton } from "./delete-item-button";
+import { AddItemForm } from "./add-item-form";
 
 export default async function QuoteDetailPage({
   params,
@@ -21,13 +22,17 @@ export default async function QuoteDetailPage({
   const { error } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: quote }, { data: items }] = await Promise.all([
+  const [{ data: quote }, { data: items }, { data: products }] = await Promise.all([
     supabase.from("quotes").select("*, customers(id, name)").eq("id", id).single(),
     supabase
       .from("quote_items")
       .select("*")
       .eq("quote_id", id)
       .order("created_at", { ascending: true }),
+    supabase
+      .from("products")
+      .select("id, name, default_unit_price")
+      .order("name"),
   ]);
 
   if (!quote) notFound();
@@ -139,61 +144,7 @@ export default async function QuoteDetailPage({
         </table>
       </div>
 
-      <form action={boundAddItem} className="flex items-end gap-2">
-        <div className="flex-1">
-          <label
-            htmlFor="description"
-            className="mb-1 block text-sm font-medium text-slate-700"
-          >
-            Description
-          </label>
-          <input
-            id="description"
-            name="description"
-            required
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-          />
-        </div>
-        <div className="w-20">
-          <label htmlFor="quantity" className="mb-1 block text-sm font-medium text-slate-700">
-            Qty
-          </label>
-          <input
-            id="quantity"
-            name="quantity"
-            type="number"
-            step="any"
-            min="0"
-            defaultValue="1"
-            required
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-          />
-        </div>
-        <div className="w-28">
-          <label
-            htmlFor="unit_price"
-            className="mb-1 block text-sm font-medium text-slate-700"
-          >
-            Unit price
-          </label>
-          <input
-            id="unit_price"
-            name="unit_price"
-            type="number"
-            step="0.01"
-            min="0"
-            defaultValue="0"
-            required
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-          />
-        </div>
-        <button
-          type="submit"
-          className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
-        >
-          Add item
-        </button>
-      </form>
+      <AddItemForm action={boundAddItem} products={products ?? []} />
     </div>
   );
 }

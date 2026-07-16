@@ -13,7 +13,7 @@ export default async function JobsPage({
   let query = supabase
     .from("jobs")
     .select(
-      "id, job_number, product_type, status, due_date, priority, assigned_to, customers(name)"
+      "id, job_number, status, due_date, priority, assigned_to, customers(name), job_items(description)"
     )
     .order("created_at", { ascending: false });
 
@@ -62,7 +62,7 @@ export default async function JobsPage({
             <tr>
               <th className="px-4 py-2 font-medium">Job #</th>
               <th className="px-4 py-2 font-medium">Customer</th>
-              <th className="px-4 py-2 font-medium">Product</th>
+              <th className="px-4 py-2 font-medium">Items</th>
               <th className="px-4 py-2 font-medium">Status</th>
               <th className="px-4 py-2 font-medium">Due</th>
               <th className="px-4 py-2 font-medium">Priority</th>
@@ -83,7 +83,11 @@ export default async function JobsPage({
                 <td className="px-4 py-2 text-slate-600">
                   {(job.customers as unknown as { name: string } | null)?.name}
                 </td>
-                <td className="px-4 py-2 text-slate-600">{job.product_type}</td>
+                <td className="px-4 py-2 text-slate-600">
+                  {(job.job_items as unknown as { description: string }[])
+                    .map((item) => item.description)
+                    .join(", ")}
+                </td>
                 <td className="px-4 py-2 text-slate-600">{job.status}</td>
                 <td className="px-4 py-2 text-slate-600">{job.due_date}</td>
                 <td className="px-4 py-2 text-slate-600">{job.priority}</td>

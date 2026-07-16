@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: "/customers", label: "Customers" },
   { href: "/jobs", label: "Jobs" },
   { href: "/quotes", label: "Quotes" },
+  { href: "/pricing", label: "Pricing" },
 ];
 
 export function Sidebar() {

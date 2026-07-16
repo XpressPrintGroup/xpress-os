@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { updateJob, updateJobStatus } from "../actions";
+import { updateJob, updateJobStatus, addJobItem, deleteJobItem } from "../actions";
 import { JOB_STATUSES } from "../statuses";
+import { AddItemForm } from "./add-item-form";
+import { DeleteItemButton } from "./delete-item-button";
 
 export default async function JobDetailPage({
   params,
@@ -25,8 +27,18 @@ export default async function JobDetailPage({
 
   const customer = job.customers as { id: string; name: string } | null;
 
+  const [{ data: items }, { data: products }] = await Promise.all([
+    supabase
+      .from("job_items")
+      .select("*")
+      .eq("job_id", id)
+      .order("created_at", { ascending: true }),
+    supabase.from("products").select("id, name").order("name"),
+  ]);
+
   const boundUpdate = updateJob.bind(null, id, job.customer_id);
   const boundUpdateStatus = updateJobStatus.bind(null, id);
+  const boundAddItem = addJobItem.bind(null, id);
 
   return (
     <div className="max-w-lg">
@@ -43,7 +55,7 @@ export default async function JobDetailPage({
       <h1 className="mb-2 text-2xl font-semibold text-slate-900">{job.job_number}</h1>
 
       {job.quote_id && (
-        <p className="mb-4 text-sm text-slate-500">
+        <p className="mb-6 text-sm text-slate-500">
           Converted from{" "}
           <Link href={`/quotes/${job.quote_id}`} className="font-medium text-slate-900">
             quote
@@ -83,8 +95,43 @@ export default async function JobDetailPage({
         </button>
       </form>
 
+      <h2 className="mb-3 text-lg font-semibold text-slate-900">Items</h2>
+
+      <div className="mb-4 overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 text-left text-slate-500">
+            <tr>
+              <th className="px-4 py-2 font-medium">Description</th>
+              <th className="px-4 py-2 font-medium">Qty</th>
+              <th className="px-4 py-2 font-medium"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {items?.map((item) => (
+              <tr key={item.id} className="border-t border-slate-100">
+                <td className="px-4 py-2 text-slate-800">{item.description}</td>
+                <td className="px-4 py-2 text-slate-600">{item.quantity}</td>
+                <td className="px-4 py-2">
+                  <DeleteItemButton action={deleteJobItem.bind(null, item.id, id)} />
+                </td>
+              </tr>
+            ))}
+            {items?.length === 0 && (
+              <tr>
+                <td colSpan={3} className="px-4 py-6 text-center text-slate-400">
+                  No items yet.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mb-8">
+        <AddItemForm action={boundAddItem} products={products ?? []} />
+      </div>
+
       <form action={boundUpdate} className="space-y-4">
-        <Field label="Product type" name="product_type" defaultValue={job.product_type} />
         <Field label="Assigned to" name="assigned_to" defaultValue={job.assigned_to} />
         <Field label="Due date" name="due_date" type="date" defaultValue={job.due_date} />
         <div>

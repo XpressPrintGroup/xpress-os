@@ -97,7 +97,11 @@ export async function convertQuoteToJob(quoteId: string, customerId: string) {
     );
   }
 
-  const { count } = await supabase.from("jobs").select("*", { count: "exact", head: true });
+  const [{ count }, { data: quoteItems }] = await Promise.all([
+    supabase.from("jobs").select("*", { count: "exact", head: true }),
+    supabase.from("quote_items").select("description, quantity").eq("quote_id", quoteId),
+  ]);
+
   const jobNumber = `JOB-${String((count ?? 0) + 1).padStart(4, "0")}`;
 
   const { data: job, error } = await supabase
@@ -112,6 +116,16 @@ export async function convertQuoteToJob(quoteId: string, customerId: string) {
 
   if (error) {
     redirect(`/quotes/${quoteId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  if (quoteItems && quoteItems.length > 0) {
+    await supabase.from("job_items").insert(
+      quoteItems.map((item) => ({
+        job_id: job.id,
+        description: item.description,
+        quantity: item.quantity,
+      }))
+    );
   }
 
   revalidatePath(`/customers/${customerId}`);

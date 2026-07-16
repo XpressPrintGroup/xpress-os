@@ -48,17 +48,6 @@ export default async function NewJobPage({
         </div>
 
         <div>
-          <label htmlFor="product_type" className="mb-1 block text-sm font-medium text-slate-700">
-            Product type
-          </label>
-          <input
-            id="product_type"
-            name="product_type"
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-          />
-        </div>
-
-        <div>
           <label htmlFor="assigned_to" className="mb-1 block text-sm font-medium text-slate-700">
             Assigned to
           </label>
@@ -117,6 +106,10 @@ export default async function NewJobPage({
           Create job
         </button>
       </form>
+
+      <p className="mt-3 text-sm text-slate-500">
+        You&apos;ll add items on the next screen.
+      </p>
     </div>
   );
 }
