@@ -52,7 +52,7 @@ export function UploadFileForm({
             "x-upsert": "false",
           },
           uploadDataDuringCreation: true,
-          removeFingerprintOnSuccess: true,
+          storeFingerprintForResuming: false,
           metadata: {
             bucketName: "job-files",
             objectName: path,
@@ -65,10 +65,7 @@ export function UploadFileForm({
           onSuccess: () => resolve(),
         });
 
-        upload.findPreviousUploads().then((previous) => {
-          if (previous.length > 0) upload.resumeFromPreviousUpload(previous[0]);
-          upload.start();
-        });
+        upload.start();
       });
 
       await recordJobFile(jobId, path, file.name);
