@@ -107,6 +107,63 @@ export async function deleteJobItem(itemId: string, jobId: string) {
   revalidatePath("/jobs");
 }
 
+function sanitizePathSegment(value: string) {
+  return value.trim().replace(/[/\\?%*:|"<>]/g, "-").slice(0, 100) || "unknown";
+}
+
+export async function uploadJobFile(jobId: string, formData: FormData) {
+  const file = formData.get("file") as File | null;
+  if (!file || file.size === 0) return;
+
+  const supabase = await createClient();
+
+  const { data: job } = await supabase
+    .from("jobs")
+    .select("job_number, customers(name), campaigns(name)")
+    .eq("id", jobId)
+    .single();
+
+  if (!job) return;
+
+  const customerName = (job.customers as unknown as { name: string } | null)?.name ?? "Unknown";
+  const campaignName = (job.campaigns as unknown as { name: string } | null)?.name ?? null;
+
+  const segments = [sanitizePathSegment(customerName)];
+  if (campaignName) segments.push(sanitizePathSegment(campaignName));
+  segments.push(sanitizePathSegment(job.job_number));
+
+  const fileName = `${job.job_number}_${sanitizePathSegment(file.name)}`;
+  const storagePath = `${segments.join("/")}/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("job-files")
+    .upload(storagePath, file, { contentType: file.type });
+
+  if (uploadError) {
+    redirect(`/jobs/${jobId}?error=${encodeURIComponent(uploadError.message)}`);
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  await supabase.from("job_files").insert({
+    job_id: jobId,
+    storage_path: storagePath,
+    original_filename: file.name,
+    uploaded_by: user?.email ?? null,
+  });
+
+  revalidatePath(`/jobs/${jobId}`);
+}
+
+export async function deleteJobFile(fileId: string, storagePath: string, jobId: string) {
+  const supabase = await createClient();
+  await supabase.storage.from("job-files").remove([storagePath]);
+  await supabase.from("job_files").delete().eq("id", fileId);
+  revalidatePath(`/jobs/${jobId}`);
+}
+
 export async function addJobActivity(jobId: string, formData: FormData) {
   const text = formData.get("text") as string;
   if (!text?.trim()) return;

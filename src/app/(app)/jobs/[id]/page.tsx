@@ -7,6 +7,8 @@ import {
   addJobItem,
   deleteJobItem,
   addJobActivity,
+  uploadJobFile,
+  deleteJobFile,
 } from "../actions";
 import { JOB_STATUSES } from "../statuses";
 import { AddItemForm } from "./add-item-form";
@@ -33,8 +35,14 @@ export default async function JobDetailPage({
 
   const customer = job.customers as { id: string; name: string } | null;
 
-  const [{ data: items }, { data: products }, { data: suppliers }, { data: activity }, { data: campaigns }] =
-    await Promise.all([
+  const [
+    { data: items },
+    { data: products },
+    { data: suppliers },
+    { data: activity },
+    { data: campaigns },
+    { data: jobFiles },
+  ] = await Promise.all([
       supabase
         .from("job_items")
         .select("*")
@@ -52,12 +60,27 @@ export default async function JobDetailPage({
         .select("id, name")
         .eq("customer_id", job.customer_id)
         .order("name"),
+      supabase
+        .from("job_files")
+        .select("*")
+        .eq("job_id", id)
+        .order("created_at", { ascending: false }),
   ]);
+
+  const files = await Promise.all(
+    (jobFiles ?? []).map(async (file) => {
+      const { data: signed } = await supabase.storage
+        .from("job-files")
+        .createSignedUrl(file.storage_path, 60 * 60);
+      return { ...file, url: signed?.signedUrl ?? null };
+    })
+  );
 
   const boundUpdate = updateJob.bind(null, id, job.customer_id);
   const boundUpdateStatus = updateJobStatus.bind(null, id);
   const boundAddItem = addJobItem.bind(null, id);
   const boundAddActivity = addJobActivity.bind(null, id);
+  const boundUploadFile = uploadJobFile.bind(null, id);
 
   return (
     <div className="max-w-4xl">
@@ -274,6 +297,55 @@ export default async function JobDetailPage({
         </div>
 
         <div>
+          <h2 className="mb-4 text-lg font-semibold text-slate-900">Files</h2>
+
+          <form action={boundUploadFile} className="mb-6 flex items-end gap-2">
+            <input
+              name="file"
+              type="file"
+              required
+              className="flex-1 text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800"
+            />
+            <button
+              type="submit"
+              className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            >
+              Upload
+            </button>
+          </form>
+
+          <ul className="mb-8 space-y-2">
+            {files.map((file) => (
+              <li
+                key={file.id}
+                className="flex items-center justify-between rounded-md border border-slate-200 bg-white p-3"
+              >
+                <div>
+                  {file.url ? (
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-slate-900 hover:underline"
+                    >
+                      {file.original_filename}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-slate-800">{file.original_filename}</span>
+                  )}
+                  <p className="mt-1 text-xs text-slate-400">
+                    {file.uploaded_by ?? "Unknown"} ·{" "}
+                    {new Date(file.created_at).toLocaleString()}
+                  </p>
+                </div>
+                <DeleteItemButton
+                  action={deleteJobFile.bind(null, file.id, file.storage_path, id)}
+                />
+              </li>
+            ))}
+            {files.length === 0 && <p className="text-sm text-slate-400">No files yet.</p>}
+          </ul>
+
           <h2 className="mb-4 text-lg font-semibold text-slate-900">Activity</h2>
 
           <form action={boundAddActivity} className="mb-6 flex gap-2">

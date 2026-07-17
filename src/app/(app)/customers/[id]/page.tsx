@@ -97,12 +97,12 @@ export default async function CustomerDetailPage({
       </div>
 
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Activity</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Customer notes</h2>
 
         <form action={boundAddActivity} className="mb-6 flex gap-2">
           <input
             name="text"
-            placeholder="Log a note..."
+            placeholder="Log a general note about this customer..."
             required
             className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
           />
