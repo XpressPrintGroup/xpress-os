@@ -7,12 +7,12 @@ import {
   addJobItem,
   deleteJobItem,
   addJobActivity,
-  uploadJobFile,
   deleteJobFile,
 } from "../actions";
 import { JOB_STATUSES } from "../statuses";
 import { AddItemForm } from "./add-item-form";
 import { DeleteItemButton } from "./delete-item-button";
+import { UploadFileForm } from "./upload-file-form";
 
 export default async function JobDetailPage({
   params,
@@ -80,7 +80,9 @@ export default async function JobDetailPage({
   const boundUpdateStatus = updateJobStatus.bind(null, id);
   const boundAddItem = addJobItem.bind(null, id);
   const boundAddActivity = addJobActivity.bind(null, id);
-  const boundUploadFile = uploadJobFile.bind(null, id);
+
+  const currentCampaignName =
+    campaigns?.find((c) => c.id === job.campaign_id)?.name ?? null;
 
   return (
     <div className="max-w-4xl">
@@ -299,20 +301,14 @@ export default async function JobDetailPage({
         <div>
           <h2 className="mb-4 text-lg font-semibold text-slate-900">Files</h2>
 
-          <form action={boundUploadFile} className="mb-6 flex items-end gap-2">
-            <input
-              name="file"
-              type="file"
-              required
-              className="flex-1 text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800"
+          <div className="mb-6">
+            <UploadFileForm
+              jobId={id}
+              customerName={customer?.name ?? "Unknown"}
+              campaignName={currentCampaignName}
+              jobNumber={job.job_number}
             />
-            <button
-              type="submit"
-              className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
-            >
-              Upload
-            </button>
-          </form>
+          </div>
 
           <ul className="mb-8 space-y-2">
             {files.map((file) => (
