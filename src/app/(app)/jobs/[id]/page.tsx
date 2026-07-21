@@ -42,6 +42,7 @@ export default async function JobDetailPage({
     { data: activity },
     { data: campaigns },
     { data: jobFiles },
+    { data: users },
   ] = await Promise.all([
       supabase
         .from("job_items")
@@ -65,6 +66,7 @@ export default async function JobDetailPage({
         .select("*")
         .eq("job_id", id)
         .order("created_at", { ascending: false }),
+      supabase.from("users").select("id, name, email").order("email"),
   ]);
 
   const files = await Promise.all(
@@ -233,7 +235,27 @@ export default async function JobDetailPage({
                 )}
               </div>
             )}
-            <Field label="Assigned to" name="assigned_to" defaultValue={job.assigned_to} />
+            <div>
+              <label
+                htmlFor="assigned_to_user_id"
+                className="mb-1 block text-sm font-medium text-slate-700"
+              >
+                Assigned to
+              </label>
+              <select
+                id="assigned_to_user_id"
+                name="assigned_to_user_id"
+                defaultValue={job.assigned_to_user_id ?? ""}
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              >
+                <option value="">Unassigned</option>
+                {users?.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name || u.email}
+                  </option>
+                ))}
+              </select>
+            </div>
             <Field label="Due date" name="due_date" type="date" defaultValue={job.due_date} />
             <div>
               <label

@@ -13,7 +13,7 @@ export default async function JobsPage({
   let query = supabase
     .from("jobs")
     .select(
-      "id, job_number, status, due_date, priority, assigned_to, customers(name), job_items(description)"
+      "id, job_number, status, due_date, priority, customers(name), job_items(description), users(name, email)"
     )
     .order("created_at", { ascending: false });
 
@@ -96,7 +96,15 @@ export default async function JobsPage({
                 <td className="px-4 py-2 text-slate-600">{job.status}</td>
                 <td className="px-4 py-2 text-slate-600">{job.due_date}</td>
                 <td className="px-4 py-2 text-slate-600">{job.priority}</td>
-                <td className="px-4 py-2 text-slate-600">{job.assigned_to}</td>
+                <td className="px-4 py-2 text-slate-600">
+                  {(() => {
+                    const assignee = job.users as unknown as {
+                      name: string | null;
+                      email: string;
+                    } | null;
+                    return assignee?.name || assignee?.email;
+                  })()}
+                </td>
               </tr>
             ))}
             {jobs?.length === 0 && (
