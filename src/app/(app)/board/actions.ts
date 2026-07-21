@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { notifyRoleOfStatusChange } from "../jobs/status-notifications";
 
 export async function moveJobStatus(jobId: string, status: string) {
   const supabase = await createClient();
@@ -10,6 +11,8 @@ export async function moveJobStatus(jobId: string, status: string) {
   if (error) {
     throw new Error(error.message);
   }
+
+  await notifyRoleOfStatusChange(supabase, jobId, status);
 
   revalidatePath("/board");
   revalidatePath("/jobs");

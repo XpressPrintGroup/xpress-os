@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { JOB_STATUSES } from "../jobs/statuses";
+import { STATUS_NOTIFY_ROLE } from "../jobs/status-notifications";
 
 const DONE_STATUSES = new Set(["Collected", "Invoiced", "Paid", "Cancelled"]);
 
@@ -16,10 +17,24 @@ function addDaysISO(days: number) {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: jobs, error } = await supabase
-    .from("jobs")
-    .select("id, job_number, status, due_date, customers(name)")
-    .order("due_date", { ascending: true, nullsFirst: false });
+
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+
+  const [{ data: jobs, error }, { data: myProfile }] = await Promise.all([
+    supabase
+      .from("jobs")
+      .select("id, job_number, status, due_date, customers(name)")
+      .order("due_date", { ascending: true, nullsFirst: false }),
+    authUser
+      ? supabase.from("users").select("role").eq("id", authUser.id).single()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const myQueueStatuses = JOB_STATUSES.filter(
+    (status) => STATUS_NOTIFY_ROLE[status] === myProfile?.role
+  );
 
   const today = todayISO();
   const weekFromNow = addDaysISO(7);
@@ -46,6 +61,19 @@ export default async function DashboardPage() {
       {error && (
         <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
           {error.message}
+        </div>
+      )}
+
+      {myQueueStatuses.length > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-3 text-lg font-semibold text-slate-900">Your queue</h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {myQueueStatuses.map((status) => (
+              <Link key={status} href={`/jobs?status=${encodeURIComponent(status)}`}>
+                <StatTile label={status} value={statusCounts[status]} tone="blue" />
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 

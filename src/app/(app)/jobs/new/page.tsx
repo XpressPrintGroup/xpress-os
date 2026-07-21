@@ -12,10 +12,11 @@ export default async function NewJobPage({
 
   const supabase = await createClient();
 
-  const [{ data: customer }, { count }, { data: campaigns }] = await Promise.all([
+  const [{ data: customer }, { count }, { data: campaigns }, { data: users }] = await Promise.all([
     supabase.from("customers").select("id, name").eq("id", customerId).single(),
     supabase.from("jobs").select("*", { count: "exact", head: true }),
     supabase.from("campaigns").select("id, name").eq("customer_id", customerId).order("name"),
+    supabase.from("users").select("id, name, email").order("email"),
   ]);
 
   if (!customer) notFound();
@@ -70,14 +71,25 @@ export default async function NewJobPage({
         )}
 
         <div>
-          <label htmlFor="assigned_to" className="mb-1 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="assigned_to_user_id"
+            className="mb-1 block text-sm font-medium text-slate-700"
+          >
             Assigned to
           </label>
-          <input
-            id="assigned_to"
-            name="assigned_to"
+          <select
+            id="assigned_to_user_id"
+            name="assigned_to_user_id"
+            defaultValue=""
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-          />
+          >
+            <option value="">Unassigned</option>
+            {users?.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name || u.email}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { notifyRoleOfStatusChange } from "./status-notifications";
 
 export async function createJob(customerId: string, formData: FormData) {
   const supabase = await createClient();
@@ -11,7 +12,7 @@ export async function createJob(customerId: string, formData: FormData) {
     job_number: formData.get("job_number") as string,
     customer_id: customerId,
     campaign_id: (formData.get("campaign_id") as string) || null,
-    assigned_to: (formData.get("assigned_to") as string) || null,
+    assigned_to_user_id: (formData.get("assigned_to_user_id") as string) || null,
     due_date: (formData.get("due_date") as string) || null,
     priority: (formData.get("priority") as string) || "Normal",
     notes: (formData.get("notes") as string) || null,
@@ -38,7 +39,7 @@ export async function updateJob(id: string, customerId: string, formData: FormDa
 
   const fields = {
     campaign_id: (formData.get("campaign_id") as string) || null,
-    assigned_to: (formData.get("assigned_to") as string) || null,
+    assigned_to_user_id: (formData.get("assigned_to_user_id") as string) || null,
     due_date: (formData.get("due_date") as string) || null,
     priority: (formData.get("priority") as string) || "Normal",
     notes: (formData.get("notes") as string) || null,
@@ -65,6 +66,8 @@ export async function updateJobStatus(id: string, formData: FormData) {
   if (error) {
     redirect(`/jobs/${id}?error=${encodeURIComponent(error.message)}`);
   }
+
+  await notifyRoleOfStatusChange(supabase, id, status);
 
   revalidatePath(`/jobs/${id}`);
   revalidatePath("/jobs");

@@ -1,9 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { updateUserProfile } from "./actions";
+import { ROLES } from "./roles";
 
-const ROLES = ["admin", "sales", "designer", "production", "accounts"];
-
-export default async function UsersPage() {
+export default async function UsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error: actionError } = await searchParams;
   const supabase = await createClient();
   const { data: users, error } = await supabase
     .from("users")
@@ -14,9 +18,9 @@ export default async function UsersPage() {
     <div>
       <h1 className="mb-6 text-2xl font-semibold text-slate-900">Users</h1>
 
-      {error && (
+      {(error || actionError) && (
         <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error.message}
+          {error?.message ?? actionError}
         </div>
       )}
 
